@@ -4,7 +4,8 @@ class SessionsController < ApplicationController
             username: params[:user][:username])
             .try(:authenticate, params[:user][:password])
         if user
-            payload = {user_id: user.id}
+            session[:user_id] = user.id
+            payload = {user_id: session[:user_id]}
             token = encode_token(payload)
             render json: {jwt: token}
         else
@@ -12,4 +13,10 @@ class SessionsController < ApplicationController
         end
     end
 
+    def destroy
+        payload = decode_token(params[:jwt])
+        user_id = payload[0]['user_id']
+        session.delete_if {|key, value| value == user_id}
+        render json: {status: 'logged out'}
+    end
 end
